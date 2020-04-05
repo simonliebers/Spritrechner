@@ -15,6 +15,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.simonliebers.spritrechner.R;
+import com.simonliebers.spritrechner.Webservice.OpeningTime;
 import com.simonliebers.spritrechner.Webservice.Station;
 
 import androidx.annotation.NonNull;
@@ -41,12 +42,13 @@ public class DetailDialog extends Dialog {
         });
 
         setBrandImage(station.getBrand().toLowerCase());
+        setDetailsText();
 
         TextView brandText = this.findViewById(R.id.brandText);
         if(station.getBrand().equals("") || station.getBrand() == null){
-            brandText.setText("Freie Tankstelle");
+            brandText.setText("FREIE TANKSTELLE");
         } else {
-            brandText.setText(station.getBrand());
+            brandText.setText(station.getBrand().toUpperCase());
         }
 
         TextView nameText = this.findViewById(R.id.nameText);
@@ -120,5 +122,21 @@ public class DetailDialog extends Dialog {
         } else {
             brandImage.setImageResource(R.drawable.brand_frei);
         }
+    }
+
+    private void setDetailsText(){
+        TextView detailsText = this.findViewById(R.id.detailsText);
+        String text = "Adress: \n" + station.getPostCode() + " " + station.getPlace()
+                + "\n" + station.getStreet() + " " + station.getHouseNumber();
+        if(station.getOpeningTimes() != null){
+            text += "\n " + "Opening Times: \n";
+            for(OpeningTime time : station.getOpeningTimes()){
+                text += "\n" + time.getText() + ": " + time.getStart() + " - " + time.getEnd();
+            }
+        }
+
+        text += "\nIsOpened: " + station.getIsOpen();
+        text += "\nDistance: " + station.getDist() + " km";
+        detailsText.setText(text);
     }
 }
