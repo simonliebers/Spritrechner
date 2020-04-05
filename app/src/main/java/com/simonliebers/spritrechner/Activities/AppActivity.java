@@ -35,6 +35,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.simonliebers.spritrechner.General.Constants;
+import com.simonliebers.spritrechner.General.DetailDialog;
 import com.simonliebers.spritrechner.General.Position;
 import com.simonliebers.spritrechner.General.StationListAdapter;
 import com.simonliebers.spritrechner.R;
@@ -145,7 +146,7 @@ public class AppActivity extends AppCompatActivity implements OnResultListener {
                 String id = listData.get(i).getID();
                 System.out.println("onItemClick: You Clicked on ID: " + id);
 
-                //Do sth with id
+                onShowpopupDetails(view, listData.get(i));
 
             }
         });
@@ -301,6 +302,17 @@ public class AppActivity extends AppCompatActivity implements OnResultListener {
         dialog.show();
     }
 
+    private void onShowpopupDetails(View v, Station station){
+        if(dialog != null){
+            if(dialog.isShowing()){
+                return;
+            }
+        }
+
+        dialog = new DetailDialog(AppActivity.this, station, v);
+        dialog.show();
+    }
+
     private void startLocationUpdates() {
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
@@ -341,6 +353,7 @@ public class AppActivity extends AppCompatActivity implements OnResultListener {
         }
         locationManager.requestLocationUpdates("gps", 5000, 10, listener);
     }
+
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {

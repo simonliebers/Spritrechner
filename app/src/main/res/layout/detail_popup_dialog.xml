@@ -1,0 +1,92 @@
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:backgroundTint="@color/colorWhite"
+    android:background="@drawable/top_corners_rounded">
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="0dp"
+        android:layout_height="30dp"
+        android:layout_gravity="center"
+        android:layout_marginStart="40dp"
+        android:layout_marginLeft="40dp"
+        android:layout_marginTop="40dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginRight="20dp"
+        android:fontFamily="@font/opensansextrabold"
+        android:text="Details"
+        android:textColor="@color/colorPrimaryDark"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:lineHeight="23dp"
+        app:layout_constraintEnd_toStartOf="@+id/closePopup"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageButton
+        android:id="@+id/closePopup"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginEnd="40dp"
+        android:layout_marginRight="40dp"
+        android:background="@drawable/round_button"
+        android:backgroundTint="@color/colorPrimary"
+        android:src="@drawable/closeicon"
+        app:layout_constraintBottom_toBottomOf="@+id/textView3"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/textView3" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/constraintLayout2"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginEnd="20dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView3">
+
+        <ImageView
+            android:id="@+id/brandImage"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="10dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/brand_agip" />
+
+        <TextView
+            android:id="@+id/brandText"
+            android:layout_width="0dp"
+            android:layout_height="25dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="10dp"
+            android:fontFamily="@font/opensanssemibold"
+            android:textColor="@color/colorPrimaryDark"
+            android:text="Brand"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/brandImage"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/nameText"
+            android:layout_width="0dp"
+            android:layout_height="25dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="10dp"
+            android:textColor="@color/colorPrimary"
+            android:fontFamily="@font/opensansregular"
+            android:text="Name"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/brandImage"
+            app:layout_constraintTop_toBottomOf="@+id/brandText" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
