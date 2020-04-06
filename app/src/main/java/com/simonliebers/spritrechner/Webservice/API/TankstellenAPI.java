@@ -29,7 +29,7 @@ public class TankstellenAPI {
     private OkHttpClient client = new OkHttpClient();
     private String url;
     private Response response;
-    double radius = 5;
+    double radius = 15;
 
     OnResultListener resultListener;
 

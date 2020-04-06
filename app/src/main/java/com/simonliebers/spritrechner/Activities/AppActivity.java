@@ -2,6 +2,7 @@ package com.simonliebers.spritrechner.Activities;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.AppCompatAutoCompleteTextView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
 import android.Manifest;
@@ -9,8 +10,11 @@ import android.app.Dialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Point;
+import android.graphics.PointF;
 import android.graphics.drawable.ColorDrawable;
 import android.location.Location;
 import android.location.LocationListener;
@@ -33,7 +37,27 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.google.gson.JsonElement;
+import com.mapbox.geojson.Feature;
+import com.mapbox.geojson.FeatureCollection;
+import com.mapbox.mapboxsdk.Mapbox;
+import com.mapbox.mapboxsdk.annotations.BaseMarkerOptions;
+import com.mapbox.mapboxsdk.annotations.Icon;
+import com.mapbox.mapboxsdk.annotations.IconFactory;
+import com.mapbox.mapboxsdk.annotations.Marker;
+import com.mapbox.mapboxsdk.annotations.MarkerOptions;
+import com.mapbox.mapboxsdk.camera.CameraPosition;
+import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
+import com.mapbox.mapboxsdk.geometry.LatLng;
+import com.mapbox.mapboxsdk.maps.MapView;
+import com.mapbox.mapboxsdk.maps.MapboxMap;
+import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
+import com.mapbox.mapboxsdk.maps.Style;
+import com.mapbox.mapboxsdk.style.layers.SymbolLayer;
+import com.mapbox.mapboxsdk.style.sources.GeoJsonSource;
 import com.simonliebers.spritrechner.General.Constants;
 import com.simonliebers.spritrechner.General.DetailDialog;
 import com.simonliebers.spritrechner.General.Position;
@@ -46,11 +70,21 @@ import com.simonliebers.spritrechner.Webservice.Tankstellen;
 
 import java.util.ArrayList;
 
+import static com.mapbox.mapboxsdk.style.expressions.Expression.stop;
+import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconAllowOverlap;
+import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconImage;
+import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconSize;
+
 public class AppActivity extends AppCompatActivity implements OnResultListener {
+
+    private enum DisplayMode{
+        Map, List
+    }
 
     ListView listView;
     TankstellenAPI api;
     Tankstellen tankstellen;
+    Station[] stations;
 
     Dialog dialog;
 
@@ -75,14 +109,23 @@ public class AppActivity extends AppCompatActivity implements OnResultListener {
     ImageView spinnerImage;
     TextView loadingText;
     ConstraintLayout loadingContainer;
+    ConstraintLayout bottomLayout;
+    Button changeDisplayMode;
+
+    private MapView mapView;
+    private MapboxMap mapboxMap;
+
+    DisplayMode displayMode = DisplayMode.List;
 
     Location latestLocation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Mapbox.getInstance(this, Constants.MapBoxAccessToken);
         setContentView(R.layout.activity_app);
 
+        mapView = findViewById(R.id.mapView);
         listView = findViewById(R.id.listView);
         spinner = findViewById(R.id.spinner);
         spinnerImage = findViewById(R.id.spinnerImage);
@@ -90,6 +133,15 @@ public class AppActivity extends AppCompatActivity implements OnResultListener {
         loadingContainer = findViewById(R.id.loadingContainer);
         changeSort = findViewById(R.id.changeSort);
         changeType = findViewById(R.id.changeType);
+        changeDisplayMode = findViewById(R.id.changeDisplayMode);
+        bottomLayout = findViewById(R.id.bottomLayout);
+
+        mapView.onCreate(savedInstanceState);
+        initializeMap(null);
+
+        listView.setVisibility(View.INVISIBLE);
+        mapView.setVisibility(View.INVISIBLE);
+        bottomLayout.setVisibility(View.INVISIBLE);
 
         if(type == Constants.Type.e10){
             changeType.setText("E10");
@@ -110,6 +162,17 @@ public class AppActivity extends AppCompatActivity implements OnResultListener {
             @Override
             public void onClick(View view) {
                 onShowpopupType(view);
+            }
+        });
+
+        changeDisplayMode.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(displayMode == DisplayMode.Map){
+                    updateDisplayMode(DisplayMode.List);
+                } else {
+                    updateDisplayMode(DisplayMode.Map);
+                }
             }
         });
 
@@ -134,7 +197,9 @@ public class AppActivity extends AppCompatActivity implements OnResultListener {
         final ArrayList<Station> listData = new ArrayList<>();
 
         for (Station tankstelle:tankstellen) {
-            listData.add(tankstelle);
+            if(tankstelle.getPrice() != 0.0){
+                listData.add(tankstelle);
+            }
         }
 
         StationListAdapter adapter = new StationListAdapter(this, R.layout.listview_cell, listData);
@@ -378,6 +443,9 @@ public class AppActivity extends AppCompatActivity implements OnResultListener {
         if(t != null){
             populateListView(t.getStations());
             loadingContainer.setVisibility(View.INVISIBLE);
+            initializeMap(t.getStations());
+            updateDisplayMode(displayMode);
+
         } else {
             changeLoadingState(LoadingState.no);
         }
@@ -473,4 +541,91 @@ public class AppActivity extends AppCompatActivity implements OnResultListener {
             loadingText.setVisibility(View.INVISIBLE);
         }
     }
+
+    private void updateDisplayMode(DisplayMode mode){
+        displayMode = mode;
+        if(mode == DisplayMode.Map){
+            mapView.setVisibility(View.VISIBLE);
+            listView.setVisibility(View.INVISIBLE);
+
+            changeType.setVisibility(View.INVISIBLE);
+            changeSort.setVisibility(View.INVISIBLE);
+            bottomLayout.setVisibility(View.VISIBLE);
+            changeDisplayMode.setText("SHOW LIST");
+
+        } else {
+            changeType.setVisibility(View.VISIBLE);
+            changeSort.setVisibility(View.VISIBLE);
+
+            mapView.setVisibility(View.INVISIBLE);
+            listView.setVisibility(View.VISIBLE);
+            bottomLayout.setVisibility(View.VISIBLE);
+            changeDisplayMode.setText("SHOW MAP");
+        }
+    }
+
+    private void initializeMap(final Station[] stations){
+        this.stations = stations;
+        mapView.getMapAsync(new OnMapReadyCallback() {
+            @Override
+            public void onMapReady(@NonNull final MapboxMap mapboxMap) {
+
+                mapboxMap.setStyle(Style.MAPBOX_STREETS, new Style.OnStyleLoaded() {
+                    @Override
+                    public void onStyleLoaded(@NonNull Style style) {
+
+                        IconFactory iconFactory = IconFactory.getInstance(AppActivity.this);
+                        Icon icon = iconFactory.fromResource(R.drawable.gps_map);
+                        Icon position = iconFactory.fromResource(R.drawable.pos_map);
+
+                        mapboxMap.getUiSettings().setCompassEnabled(false);
+
+                        if(stations != null){
+                            for(Station station : stations){
+                                mapboxMap.addMarker(new MarkerOptions()
+                                        .position(new LatLng(station.getLat(), station.getLng()))
+                                        .icon(icon)
+                                        .title(station.getID()));
+                            }
+                        }
+
+                        if(latestLocation != null){
+                            mapboxMap.addMarker(new MarkerOptions()
+                                    .position(new LatLng(latestLocation.getLatitude(), latestLocation.getLongitude()))
+                                    .icon(position)
+                                    .title("latestPosition"));
+
+                            CameraPosition cameraPosition = new CameraPosition.Builder()
+                                    .target(new LatLng(latestLocation.getLatitude(), latestLocation.getLongitude()))
+                                    .zoom(10)
+                                    .tilt(20)
+                                    .build();
+                            mapboxMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition), 1000);
+                        }
+
+                        mapboxMap.setOnMarkerClickListener(new MapboxMap.OnMarkerClickListener() {
+                            @Override
+                            public boolean onMarkerClick(@NonNull Marker marker) {
+                                Station clicked = null;
+                                for(Station station : stations){
+                                    if(station.getID().equals(marker.getTitle())){
+                                        clicked = station;
+                                    }
+                                }
+
+                                if(clicked != null){
+                                    onShowpopupDetails(mapView, clicked);
+                                }
+
+                                return true;
+                            }
+                        });
+
+                    }
+                });
+
+            }
+        });
+    }
+
 }
