@@ -7,6 +7,7 @@ import com.simonliebers.spritrechner.General.Constants;
 import com.simonliebers.spritrechner.General.Position;
 import com.simonliebers.spritrechner.Webservice.DetailsConverter;
 import com.simonliebers.spritrechner.Webservice.ListConverter;
+import com.simonliebers.spritrechner.Webservice.Station;
 import com.simonliebers.spritrechner.Webservice.Tankstellen;
 import com.simonliebers.spritrechner.Webservice.TankstellenDetails;
 
@@ -15,6 +16,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 
+import androidx.constraintlayout.widget.ConstraintLayout;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
@@ -68,6 +70,12 @@ public class TankstellenAPI {
             countDownLatch.await();
         } catch (InterruptedException e){
 
+        }
+
+        for(Station station : tankstellen.getStations()){
+            if(station.getOpeningTimes() != null){
+                System.out.println(station.getName());
+            }
         }
 
         resultListener.callback(tankstellen);

@@ -374,7 +374,7 @@ public class AppActivity extends AppCompatActivity implements OnResultListener {
             }
         }
 
-        dialog = new DetailDialog(AppActivity.this, station, v);
+        dialog = new DetailDialog(AppActivity.this, station, v, type);
         dialog.show();
     }
 

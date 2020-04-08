@@ -1,5 +1,6 @@
 package com.simonliebers.spritrechner.General;
 
+import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
 import android.graphics.Color;
@@ -10,6 +11,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -24,7 +26,7 @@ public class DetailDialog extends Dialog {
 
     Station station;
 
-    public DetailDialog(@NonNull Context context, Station station, View view) {
+    public DetailDialog(@NonNull Context context, Station station, View view, Constants.Type type) {
         super(context);
 
         this.station = station;
@@ -42,17 +44,11 @@ public class DetailDialog extends Dialog {
         });
 
         setBrandImage(station.getBrand().toLowerCase());
-        setDetailsText();
-
-        TextView brandText = this.findViewById(R.id.brandText);
-        if(station.getBrand().equals("") || station.getBrand() == null){
-            brandText.setText("FREIE TANKSTELLE");
-        } else {
-            brandText.setText(station.getBrand().toUpperCase());
-        }
-
-        TextView nameText = this.findViewById(R.id.nameText);
-        nameText.setText(station.getName());
+        setAdressText();
+        updateOpenIndicator();
+        setBrandText();
+        setOpeningTimes();
+        setPrices(type);
 
         Display display = getWindow().getWindowManager().getDefaultDisplay();
         final Point size = new Point();
@@ -124,19 +120,65 @@ public class DetailDialog extends Dialog {
         }
     }
 
-    private void setDetailsText(){
-        TextView detailsText = this.findViewById(R.id.detailsText);
-        String text = "Adress: \n" + station.getPostCode() + " " + station.getPlace()
-                + "\n" + station.getStreet() + " " + station.getHouseNumber();
-        if(station.getOpeningTimes() != null){
-            text += "\n " + "Opening Times: \n";
-            for(OpeningTime time : station.getOpeningTimes()){
-                text += "\n" + time.getText() + ": " + time.getStart() + " - " + time.getEnd();
-            }
+    void setAdressText(){
+        TextView placeText = this.findViewById(R.id.placeText);
+        placeText.setText(station.getPostCode() + " " + station.getPlace());
+
+        TextView streetText = this.findViewById(R.id.streetText);
+        streetText.setText(station.getStreet() + " " + station.getHouseNumber());
+    }
+
+    void updateOpenIndicator(){
+        Button openIndicator = this.findViewById(R.id.openIndicator);
+        if(station.getIsOpen()){
+            openIndicator.setVisibility(View.INVISIBLE);
+        } else {
+            openIndicator.setVisibility(View.VISIBLE);
+        }
+    }
+
+    void setBrandText(){
+        TextView brandText = this.findViewById(R.id.brandText);
+        if(station.getBrand().equals("") || station.getBrand() == null){
+            brandText.setText("FREIE TANKSTELLE");
+        } else {
+            brandText.setText(station.getBrand().toUpperCase());
         }
 
-        text += "\nIsOpened: " + station.getIsOpen();
-        text += "\nDistance: " + station.getDist() + " km";
-        detailsText.setText(text);
+        TextView nameText = this.findViewById(R.id.nameText);
+        nameText.setText(station.getName());
+    }
+
+    void setOpeningTimes(){
+        TextView timesText = this.findViewById(R.id.timesText);
+        String times = "";
+
+        if(station.getOpeningTimes() == null || station.getOpeningTimes().length == 0){
+            timesText.setText("Not known");
+        } else {
+            for(OpeningTime time : station.getOpeningTimes()){
+                times += time.getText() + " " + time.getStart() + " - " + time.getEnd() + "\n";
+            }
+            timesText.setText(times);
+        }
+    }
+
+    void setPrices(Constants.Type type){
+
+        TextView typeText = this.findViewById(R.id.typeText);
+        TextView typePrice = this.findViewById(R.id.typeNum);
+
+        if(type == Constants.Type.diesel){
+            typePrice.setText(Double.toString(station.getPrice()).replace(".", ","));
+            typeText.setText("Diesel");
+        } else if(type == Constants.Type.e5){
+            typePrice.setText(Double.toString(station.getPrice()).replace(".", ","));
+            typeText.setText("E5");
+        } else if(type == Constants.Type.e10){
+            typePrice.setText(Double.toString(station.getPrice()).replace(".", ","));
+            typeText.setText("E10");
+        }
+
+
     }
 }
