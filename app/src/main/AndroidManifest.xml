@@ -9,11 +9,15 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme.NoActionBar">
-        <activity android:name=".Activities.DataActivity"
-            android:screenOrientation="portrait"/>
-        <activity android:name=".Activities.AppActivity"
-            android:screenOrientation="portrait"/>
-        <activity android:name=".Activities.MainActivity"
+        <activity android:name=".Activities.Calculator.CalculatorActivity"></activity>
+        <activity
+            android:name=".Activities.Stations.DataActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Activities.Stations.AppActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Activities.Stations.MainActivity"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -22,9 +26,9 @@
             </intent-filter>
         </activity>
     </application>
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.INTERNET" />
-
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
 </manifest>

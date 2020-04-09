@@ -1,4 +1,4 @@
-package com.simonliebers.spritrechner.Activities;
+package com.simonliebers.spritrechner.Activities.Stations;
 
 import androidx.appcompat.app.AppCompatActivity;
 

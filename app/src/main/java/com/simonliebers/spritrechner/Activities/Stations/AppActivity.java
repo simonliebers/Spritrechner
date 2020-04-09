@@ -1,28 +1,23 @@
-package com.simonliebers.spritrechner.Activities;
+package com.simonliebers.spritrechner.Activities.Stations;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.AppCompatAutoCompleteTextView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
 import android.Manifest;
 import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Point;
-import android.graphics.PointF;
 import android.graphics.drawable.ColorDrawable;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.provider.ContactsContract;
 import android.provider.Settings;
 import android.view.Display;
 import android.view.Gravity;
@@ -37,14 +32,8 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.google.gson.JsonElement;
-import com.mapbox.geojson.Feature;
-import com.mapbox.geojson.FeatureCollection;
 import com.mapbox.mapboxsdk.Mapbox;
-import com.mapbox.mapboxsdk.annotations.BaseMarkerOptions;
 import com.mapbox.mapboxsdk.annotations.Icon;
 import com.mapbox.mapboxsdk.annotations.IconFactory;
 import com.mapbox.mapboxsdk.annotations.Marker;
@@ -56,8 +45,7 @@ import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
 import com.mapbox.mapboxsdk.maps.Style;
-import com.mapbox.mapboxsdk.style.layers.SymbolLayer;
-import com.mapbox.mapboxsdk.style.sources.GeoJsonSource;
+import com.simonliebers.spritrechner.Activities.Calculator.CalculatorActivity;
 import com.simonliebers.spritrechner.General.Constants;
 import com.simonliebers.spritrechner.General.DetailDialog;
 import com.simonliebers.spritrechner.General.Position;
@@ -70,11 +58,6 @@ import com.simonliebers.spritrechner.Webservice.Tankstellen;
 
 import java.util.ArrayList;
 
-import static com.mapbox.mapboxsdk.style.expressions.Expression.stop;
-import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconAllowOverlap;
-import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconImage;
-import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconSize;
-
 public class AppActivity extends AppCompatActivity implements OnResultListener {
 
     private enum DisplayMode{
@@ -85,11 +68,13 @@ public class AppActivity extends AppCompatActivity implements OnResultListener {
     TankstellenAPI api;
     Tankstellen tankstellen;
     Station[] stations;
+    Station lastClickedStation;
 
     Dialog dialog;
 
     ImageButton changeSort;
     Button changeType;
+    ImageButton calcButton;
 
     CheckBox checkSuper;
     CheckBox checkE10;
@@ -135,6 +120,21 @@ public class AppActivity extends AppCompatActivity implements OnResultListener {
         changeType = findViewById(R.id.changeType);
         changeDisplayMode = findViewById(R.id.changeDisplayMode);
         bottomLayout = findViewById(R.id.bottomLayout);
+        calcButton = findViewById(R.id.calcButton);
+
+        calcButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(AppActivity.this, CalculatorActivity.class);
+                if(lastClickedStation == null){
+                    intent.putExtra("uid", "");
+                } else {
+                    intent.putExtra("uid", lastClickedStation.getID());
+                }
+
+                startActivity(intent);
+            }
+        });
 
         mapView.onCreate(savedInstanceState);
         initializeMap(null);
@@ -180,6 +180,7 @@ public class AppActivity extends AppCompatActivity implements OnResultListener {
 
         pref = getApplicationContext().getSharedPreferences(Constants.DataPrefs, 0);
         type = Constants.Type.valueOf(pref.getString(Constants.GasKey, null));
+        //sort = Constants.Sort.valueOf(pref.getString(Constants.SortKey, null));
 
         api = new TankstellenAPI(this);
     }
@@ -211,6 +212,7 @@ public class AppActivity extends AppCompatActivity implements OnResultListener {
                 String id = listData.get(i).getID();
                 System.out.println("onItemClick: You Clicked on ID: " + id);
 
+                lastClickedStation = listData.get(i);
                 onShowpopupDetails(view, listData.get(i));
 
             }
@@ -368,6 +370,7 @@ public class AppActivity extends AppCompatActivity implements OnResultListener {
     }
 
     private void onShowpopupDetails(View v, Station station){
+
         if(dialog != null){
             if(dialog.isShowing()){
                 return;
@@ -375,6 +378,14 @@ public class AppActivity extends AppCompatActivity implements OnResultListener {
         }
 
         dialog = new DetailDialog(AppActivity.this, station, v, type);
+
+        dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialogInterface) {
+                lastClickedStation = null;
+            }
+        });
+
         dialog.show();
     }
 
@@ -478,6 +489,10 @@ public class AppActivity extends AppCompatActivity implements OnResultListener {
                 tankstellen = api.getTankstellen(new Position(latestLocation.getLatitude(), latestLocation.getLongitude()), this.type, this.sort);
             }
         }
+
+        SharedPreferences.Editor editor = pref.edit();
+        editor.putString(Constants.SortKey, sort.toString());
+        editor.apply();
     }
 
     private void updateType(Constants.Type type){
@@ -515,6 +530,10 @@ public class AppActivity extends AppCompatActivity implements OnResultListener {
                 tankstellen = api.getTankstellen(new Position(latestLocation.getLatitude(), latestLocation.getLongitude()), this.type, this.sort);
             }
         }
+
+        SharedPreferences.Editor editor = pref.edit();
+        editor.putString(Constants.GasKey, type.toString());
+        editor.apply();
     }
 
     private void changeLoadingState(LoadingState state){
