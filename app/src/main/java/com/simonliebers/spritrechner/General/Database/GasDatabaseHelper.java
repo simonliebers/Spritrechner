@@ -27,7 +27,7 @@ public class GasDatabaseHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         String createTable = "CREATE TABLE " + TABLE_NAME + " (ID INTEGER PRIMARY KEY AUTOINCREMENT, "
-                + COL2 + " TEXT, "
+                + COL2 + " TEXT DEFAULT '', "
                 + COL3 + " DATETIME DEFAULT CURRENT_TIMESTAMP, "
                 + COL4 + " INTEGER DEFAULT 0, "
                 + COL5 + " INTEGER DEFAULT 0)";

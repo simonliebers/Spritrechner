@@ -14,6 +14,10 @@ import com.simonliebers.spritrechner.Activities.Stations.AppActivity;
 import com.simonliebers.spritrechner.General.Database.GasDatabaseHelper;
 import com.simonliebers.spritrechner.R;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 public class CalculatorActivity extends AppCompatActivity {
 
     ImageButton stationsButton;
@@ -35,7 +39,7 @@ public class CalculatorActivity extends AppCompatActivity {
 
         stationsButton = findViewById(R.id.stationsButton);
         tankButton = findViewById(R.id.tankButton);
-        textView = findViewById(R.id.textView);
+        //textView = findViewById(R.id.textView);
 
         stationsButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -59,17 +63,34 @@ public class CalculatorActivity extends AppCompatActivity {
 
         }
 
+        setThisMonthAmount();
 
     }
 
     private void setThisMonthAmount(){
-        int amount = 0;
+
+        int completeAmount = 0;
+
         Cursor data = gasDatabaseHelper.getData();
         while(data.moveToNext()){
-            text += data.getString(1) + " " + data.getString(2) + " " + data.getInt(3) + " " + data.getInt(4) + "\n";
+            String stationUID = data.getString(1);
+            String timestamp = data.getString(2);
+            int amount = data.getInt(3);
+            int price = data.getInt(4);
 
+            Date date;
+
+            try {
+                date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(timestamp);
+            } catch (ParseException e) {
+                date = new Date();
+            }
+
+            if(date.getMonth() == new Date().getMonth()){
+                completeAmount += amount;
+            }
         }
 
-        textView.setText(text);
+        textView.setText(completeAmount + "€");
     }
 }

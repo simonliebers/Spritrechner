@@ -3,9 +3,13 @@ package com.simonliebers.spritrechner.General;
 import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.drawable.ColorDrawable;
+import android.net.Uri;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.View;
@@ -16,15 +20,22 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.simonliebers.spritrechner.Activities.Stations.AppActivity;
 import com.simonliebers.spritrechner.R;
+import com.simonliebers.spritrechner.Webservice.DetailsConverter;
 import com.simonliebers.spritrechner.Webservice.OpeningTime;
 import com.simonliebers.spritrechner.Webservice.Station;
+
+import java.util.Locale;
 
 import androidx.annotation.NonNull;
 
 public class DetailDialog extends Dialog {
 
     Station station;
+    Dialog dialog;
+    Constants.Type type;
+    View view;
 
     public DetailDialog(@NonNull Context context, Station station, View view, Constants.Type type) {
         super(context);
@@ -35,11 +46,22 @@ public class DetailDialog extends Dialog {
         this.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         this.getWindow().getAttributes().windowAnimations = R.style.DialogAnimation;
 
+        this.type = type;
+        this.view = view;
+
         ImageButton close = this.findViewById(R.id.closePopup);
         close.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 dismiss();
+            }
+        });
+
+        Button tankButton = this.findViewById(R.id.tankButton);
+        tankButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                handleTankUp();
             }
         });
 
@@ -130,10 +152,20 @@ public class DetailDialog extends Dialog {
 
     void updateOpenIndicator(){
         Button openIndicator = this.findViewById(R.id.openIndicator);
+
+        openIndicator.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                handleOpenIndicatorClick();
+            }
+        });
+
         if(station.getIsOpen()){
-            openIndicator.setVisibility(View.INVISIBLE);
+            openIndicator.setBackgroundTintList(ColorStateList.valueOf(getContext().getColor(R.color.colorGreen)));
+            openIndicator.setText("START NAVIGATION");
         } else {
-            openIndicator.setVisibility(View.VISIBLE);
+            openIndicator.setBackgroundTintList(ColorStateList.valueOf(getContext().getColor(R.color.colorRed)));
+            openIndicator.setText("THIS STATION IS CLOSED");
         }
     }
 
@@ -181,4 +213,19 @@ public class DetailDialog extends Dialog {
 
 
     }
+
+    void handleOpenIndicatorClick(){
+        if(station.getIsOpen()){
+            String uri = String.format(Locale.ENGLISH, "geo:" + station.getLat() + "," + station.getLng() + "?q=" + station.getLat() +"," + station.getLng() + "(" + station.getBrand()+ ")");
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
+            getContext().startActivity(intent);
+        }
+    }
+
+    void handleTankUp(){
+        dialog = new TankUpDialog(getContext(), station, view, type, station.getPrice());
+
+        dialog.show();
+    }
+
 }
