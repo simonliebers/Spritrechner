@@ -58,6 +58,11 @@ public class DetailDialog extends Dialog {
         });
 
         Button tankButton = this.findViewById(R.id.tankButton);
+
+        if(!station.getIsOpen()){
+            tankButton.setVisibility(View.INVISIBLE);
+        }
+
         tankButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

@@ -29,8 +29,8 @@ public class GasDatabaseHelper extends SQLiteOpenHelper {
         String createTable = "CREATE TABLE " + TABLE_NAME + " (ID INTEGER PRIMARY KEY AUTOINCREMENT, "
                 + COL2 + " TEXT DEFAULT '', "
                 + COL3 + " DATETIME DEFAULT CURRENT_TIMESTAMP, "
-                + COL4 + " INTEGER DEFAULT 0, "
-                + COL5 + " INTEGER DEFAULT 0)";
+                + COL4 + " TEXT DEFAULT '0', "
+                + COL5 + " TEXT DEFAULT '0')";
 
         db.execSQL(createTable);
     }
@@ -41,7 +41,7 @@ public class GasDatabaseHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    public boolean addData(String stationuid, int amount, int price) {
+    public boolean addData(String stationuid, String amount, String price) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(COL2, stationuid);

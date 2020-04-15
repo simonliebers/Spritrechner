@@ -21,6 +21,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.simonliebers.spritrechner.General.Database.GasDatabaseHelper;
 import com.simonliebers.spritrechner.R;
 import com.simonliebers.spritrechner.Webservice.OpeningTime;
 import com.simonliebers.spritrechner.Webservice.Station;
@@ -38,8 +39,12 @@ public class TankUpDialog extends Dialog {
     Button submitButton;
 
     ImageButton close;
+    GasDatabaseHelper databaseHelper;
 
-    public TankUpDialog(@NonNull Context context, Station station, View view, Constants.Type type, double price) {
+    double priceNumDouble = 0;
+    double litersNumDouble = 0;
+
+    public TankUpDialog(@NonNull Context context, final Station station, View view, Constants.Type type, double price) {
         super(context);
 
         this.station = station;
@@ -47,6 +52,8 @@ public class TankUpDialog extends Dialog {
         this.setContentView(R.layout.tankup_popup_dialog);
         this.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         this.getWindow().getAttributes().windowAnimations = R.style.DialogAnimation;
+
+        databaseHelper = new GasDatabaseHelper(getContext());
 
         priceNum = this.findViewById(R.id.priceNum);
         litersNum = this.findViewById(R.id.litersNum);
@@ -66,10 +73,18 @@ public class TankUpDialog extends Dialog {
             }
         });
 
+        submitButton.setActivated(false);
         submitButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(station == null){
+                    databaseHelper.addData("null", Double.toString(litersNumDouble), Double.toString(priceNumDouble));
+                } else {
+                    databaseHelper.addData(station.getID(), Double.toString(litersNumDouble), Double.toString(priceNumDouble));
+                }
 
+
+                dismiss();
             }
         });
 
@@ -117,9 +132,6 @@ public class TankUpDialog extends Dialog {
     }
 
     void updateAll(){
-        double priceNumDouble = 0;
-        double litersNumDouble = 0;
-
         try{
             priceNumDouble = Double.parseDouble(priceNum.getText().toString());
             litersNumDouble = Double.parseDouble(litersNum.getText().toString());
@@ -128,9 +140,11 @@ public class TankUpDialog extends Dialog {
         }
 
         if(priceNumDouble != 0 && litersNumDouble != 0){
-            submitButton.setText("Submit for " + priceNumDouble * litersNumDouble + " €");
+            submitButton.setActivated(true);
+            submitButton.setText("Submit for " + Math.round((priceNumDouble * litersNumDouble)*1000d)/1000d + " €");
             submitButton.setBackgroundTintList(ColorStateList.valueOf(getContext().getColor(R.color.colorGreen)));
         } else {
+            submitButton.setActivated(false);
             submitButton.setText("Change values");
             submitButton.setBackgroundTintList(ColorStateList.valueOf(getContext().getColor(R.color.colorDarkGrey)));
         }
